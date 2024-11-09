@@ -1,0 +1,24 @@
+diff --git a/mem0/configs/base.py b/mem0/configs/base.py
+index abcdef..123456 100644
+--- a/mem0/configs/base.py
++++ b/mem0/configs/base.py
+@@ -1,4 +1,5 @@
+ import os
++import logging
+ from typing import Dict, Any, Optional
+ 
+ from pydantic import BaseModel, Field
+@@ -55,8 +56,12 @@ class MemoryConfig(BaseModel):
+     def __init__(self, **data):
+         super().__init__(**data)
+         # Remove 'batch_size' from embedder config if it exists
+-        if 'batch_size' in self.embedder.config:
+-            del self.embedder.config['batch_size']
++        if 'batch_size' in self.embedder.config:
++            batch_size = self.embedder.config.pop('batch_size')
++            # Log the batch size removal with a warning
++            logging.warning(f"Batch size {batch_size} removed from embedder configuration. "
++                            "Consider configuring batch processing separately.")
+ 
+     # Rest of the class remains unchanged
++    pass

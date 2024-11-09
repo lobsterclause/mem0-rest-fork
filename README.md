@@ -1,152 +1,136 @@
-# Dockerized Mem0 REST APIs
+# Memory System REST API
 
-This is an **unofficial** dockerized API server that wraps around Mem0's [open-source python project](https://github.com/mem0ai/mem0).
+A FastAPI-based REST API for memory operations, providing a robust interface for managing and querying memories.
 
-## Getting Started
+## Features
 
-This project requires an OpenAI API key to work. Support for other providers is not implemented yet.
+- Memory CRUD operations
+- Memory search and querying
+- Memory history tracking
+- Memory relations management
+- Real-time updates via WebSocket
+- Cross-session memory bridging
+- Memory compression
+- Memory suggestions
 
-First,
+## Requirements
 
+- Python 3.9+
+- Docker and Docker Compose
+- Neo4j 4.4+
+- Qdrant latest version
+- OpenAI API key
+
+## Quick Start
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/mem0-rest.git
+cd mem0-rest
+```
+
+2. Copy the sample environment file and update it with your settings:
 ```bash
 cp sample.env .env
 ```
 
-Edit `.env` and replace the dummy value for `OPENAI_API_KEY` with an actual value. Then,
-
+3. Start the services using Docker Compose:
 ```bash
-docker compose up
-# The server is now running at http://localhost:4321
+docker-compose up -d
 ```
 
-## Documentation
+4. The API will be available at http://localhost:8000
+   - API documentation: http://localhost:8000/api/docs
+   - ReDoc documentation: http://localhost:8000/api/redoc
 
-- [Integration Guide](docs/integration-guide.md) - Comprehensive guide for integrating this API into your projects
-- [API Reference](docs/api-reference.md) - Detailed API endpoint documentation
-- [Configuration Guide](docs/configuration.md) - Configuration options and environment setup
+## Development Setup
 
-## Features
+1. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+.\venv\Scripts\activate   # Windows
+```
 
-### Vector Database
-The project uses Qdrant for vector storage and semantic search capabilities.
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-### Graph Database
-The project now supports graph capabilities through Neo4j, allowing you to create and manage relationships between memories.
+3. Run the development server:
+```bash
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-## Project Integration
-
-For detailed instructions on integrating this API into your project, please refer to our [Integration Guide](docs/integration-guide.md). The guide covers:
-
-- Installation & Setup
-- Basic Integration Steps
-- Authentication
-- Core Features
-- Advanced Usage
-- Troubleshooting
-- Performance Optimization
-
-## API Examples
+## API Endpoints
 
 ### Memory Operations
+- `POST /api/memories/` - Create a new memory
+- `GET /api/memories/{memory_id}` - Get a memory by ID
+- `PUT /api/memories/{memory_id}` - Update a memory
+- `DELETE /api/memories/{memory_id}` - Delete a memory
+- `GET /api/memories/` - List memories with filters
 
-#### Add a memory
+### Memory Search
+- `POST /api/queries/search` - Search memories
+- `GET /api/queries/suggestions` - Get memory suggestions
+- `GET /api/queries/similar/{memory_id}` - Get similar memories
 
+### Memory History
+- `GET /api/history/{memory_id}` - Get memory history
+- `GET /api/history/relations/{memory_id}` - Get memory relations
+- `POST /api/history/relations` - Add memory relation
+- `DELETE /api/history/relations/{relation_id}` - Remove memory relation
+
+### WebSocket Endpoints
+- `/api/ws/memory/{session_id}` - Memory updates stream
+- `/api/ws/stream/{session_id}` - Memory content stream
+
+## Configuration
+
+The application can be configured using environment variables or a `.env` file. See `sample.env` for available options.
+
+### Key Configuration Options
+
+- `API_VERSION` - API version
+- `DEBUG` - Enable debug mode
+- `JWT_SECRET` - Secret key for JWT tokens
+- `OPENAI_API_KEY` - OpenAI API key
+- `QDRANT_HOST` - Qdrant host
+- `NEO4J_URI` - Neo4j connection URI
+
+## Testing
+
+Run tests using pytest:
 ```bash
-curl --request POST \
-  --url http://localhost:4321/v1/memories/ \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "messages": [
-      {
-        "role": "user",
-        "content": "I am working on improving my tennis skills. Suggest some online courses."
-      }
-    ],
-    "user_id": "user1",
-    "agent_id": "app1",
-    "metadata": {"category": "hobbies"}
-  }'
+pytest
 ```
 
-#### Update a memory
-
+Run tests with coverage:
 ```bash
-curl --request PUT \
-  --url http://localhost:4321/v1/memories/<memory_id>/ \
-  --header 'Content-Type: application/json' \
-  --data '{"data": "Likes to play tennis on weekends"}'
+pytest --cov=src --cov-report=html
 ```
 
-#### Search for memories
+## Docker Support
 
+Build the Docker image:
 ```bash
-curl --request POST \
- --url http://localhost:4321/v1/memories/search/ \
- --header 'Content-Type: application/json' \
- --data '{"query": "What are Alice'\''s hobbies?", "user_id": "user1"}'
+docker build -t mem0-rest .
 ```
 
-#### Get all memories
-
+Run the container:
 ```bash
-curl http://localhost:4321/v1/memories/
+docker run -p 8000:8000 --env-file .env mem0-rest
 ```
 
-#### Get a memory's history
+## Contributing
 
-```bash
-curl http://localhost:4321/v1/memories/<memory_id>/history/
-```
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-### Graph Operations
+## License
 
-#### Create a relationship between memories
-
-```bash
-curl --request POST \
-  --url http://localhost:4321/v1/relationships \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "source_id": "memory_id_1",
-    "target_id": "memory_id_2",
-    "type": "related_to",
-    "weight": 0.8,
-    "metadata": {"context": "sports_activities"}
-  }'
-```
-
-#### Get relationships for a memory
-
-```bash
-curl --request GET \
-  --url "http://localhost:4321/v1/memories/<memory_id>/relationships?type=related_to&min_weight=0.5"
-```
-
-#### Update a relationship
-
-```bash
-curl --request PUT \
-  --url http://localhost:4321/v1/relationships/<relationship_id> \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "weight": 0.9,
-    "metadata": {"updated_context": "high_priority"}
-  }'
-```
-
-#### Delete a relationship
-
-```bash
-curl --request DELETE \
-  --url http://localhost:4321/v1/relationships/<relationship_id>"
-```
-
-## API (dis)parity
-
-We tried to keep it as close to [Mem0's cloud APIs](https://docs.mem0.ai/api-reference/overview) as possible, but there are still some differences between the API spec and the Python function calls. This shouldn't be treated as a 1:1 mapping of the cloud APIs, instead it is simply a wrapper over [the function calls](https://github.com/mem0ai/mem0/blob/main/mem0/memory/main.py#L27).
-
-## Motivation
-
-We are using Mem0 for our project at https://github.com/Airstrip-AI/airstrip (Typescript). In order to provide a fully open-source project, we need an API server i.e. "an open-source version of Mem0 cloud". We searched and did not find one, hence we built this.
-
-If you are not building on Python, but want to try out Mem0 locally, hope this helps!
+This project is licensed under the MIT License - see the LICENSE file for details.
