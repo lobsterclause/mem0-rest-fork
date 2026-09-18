@@ -1,3 +1,5 @@
+![Memory REST API — Vector recall. Graph context. Real-time flow.](docs/assets/memory-rest-api-banner.png)
+
 # Memory System REST API
 
 A FastAPI-based REST API for memory operations, providing a robust interface for managing and querying memories.
